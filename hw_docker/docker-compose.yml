@@ -1,0 +1,39 @@
+version: "3"
+
+
+services:
+  server:
+    build: ./server
+    ports:
+      - 8080:8080
+    networks:
+      - webnet
+
+  prometheus:
+    image: prom/prometheus:v2.40.7
+    volumes:
+      - ./server/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - server
+    networks:
+      - webnet
+
+  grafana:
+    image: grafana/grafana:9.4.2
+    volumes:
+      - ./server/grafana/config.ini:/etc/grafana/grafana.ini
+      - ./server/grafana/datasource.yml:/etc/grafana/provisioning/datasources/default.yaml
+      - ./server/grafana/dashboard.yml:/etc/grafana/provisioning/dashboards/default.yaml
+      - ./server/grafana/dashboards:/var/lib/grafana/dashboards
+    ports:
+      - 3000:3000
+    depends_on:
+      - prometheus
+      - server
+    networks:
+      - webnet
+
+
+networks:
+  webnet:
+    driver: bridge
